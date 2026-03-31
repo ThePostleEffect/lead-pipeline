@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Pipeline — Xemory Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf9;
+    --bg-card: #ffffff;
+    --bg-subtle: #f5f5f4;
+    --text-primary: #1c1917;
+    --text-secondary: #57534e;
+    --text-tertiary: #a8a29e;
+    --border: #e7e5e4;
+    --border-subtle: #f0efed;
+    --accent: #6366f1;
+    --accent-soft: #eef2ff;
+    --source-bg: #eff6ff;
+    --source-border: #bfdbfe;
+    --source-text: #1e40af;
+    --source-sub: #3b82f6;
+    --enrich-bg: #ecfdf5;
+    --enrich-border: #a7f3d0;
+    --enrich-text: #065f46;
+    --enrich-sub: #059669;
+    --enrich-container: #f0fdf9;
+    --enrich-container-border: #d1fae5;
+    --rules-bg: #f5f3ff;
+    --rules-border: #c4b5fd;
+    --rules-text: #5b21b6;
+    --rules-sub: #7c3aed;
+    --score-bg: #fffbeb;
+    --score-border: #fde68a;
+    --score-text: #92400e;
+    --score-sub: #d97706;
+    --filter-bg: #fff1f2;
+    --filter-border: #fecdd3;
+    --filter-text: #9f1239;
+    --filter-sub: #e11d48;
+    --output-bg: #f0fdf4;
+    --output-border: #bbf7d0;
+    --output-text: #166534;
+    --output-sub: #16a34a;
+    --discard: #ef4444;
+    --discard-soft: #fef2f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0a09;
+      --bg-card: #1c1917;
+      --bg-subtle: #292524;
+      --text-primary: #fafaf9;
+      --text-secondary: #a8a29e;
+      --text-tertiary: #78716c;
+      --border: #44403c;
+      --border-subtle: #292524;
+      --accent: #818cf8;
+      --accent-soft: #1e1b4b;
+      --source-bg: #172137;
+      --source-border: #1e3a5f;
+      --source-text: #93c5fd;
+      --source-sub: #60a5fa;
+      --enrich-bg: #0d2818;
+      --enrich-border: #14532d;
+      --enrich-text: #86efac;
+      --enrich-sub: #4ade80;
+      --enrich-container: #0a1f12;
+      --enrich-container-border: #14532d;
+      --rules-bg: #1e1338;
+      --rules-border: #3b2470;
+      --rules-text: #c4b5fd;
+      --rules-sub: #a78bfa;
+      --score-bg: #271e08;
+      --score-border: #4d3800;
+      --score-text: #fcd34d;
+      --score-sub: #fbbf24;
+      --filter-bg: #2a0e18;
+      --filter-border: #4c0d24;
+      --filter-text: #fda4af;
+      --filter-sub: #fb7185;
+      --output-bg: #0d2818;
+      --output-border: #14532d;
+      --output-text: #86efac;
+      --output-sub: #4ade80;
+      --discard: #f87171;
+      --discard-soft: #2a0e0e;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 40px 20px 80px;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Pipeline spine */
+  .pipeline {
+    position: relative;
+  }
+  .pipeline::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--border), var(--border-subtle));
+  }
+
+  /* Stage */
+  .stage {
+    position: relative;
+    padding-left: 72px;
+    padding-bottom: 40px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: stage-in 0.5s ease-out forwards;
+  }
+  .stage:last-child { padding-bottom: 0; }
+
+  @keyframes stage-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stage:nth-child(1) { animation-delay: 0.1s; }
+  .stage:nth-child(2) { animation-delay: 0.2s; }
+  .stage:nth-child(3) { animation-delay: 0.35s; }
+  .stage:nth-child(4) { animation-delay: 0.5s; }
+  .stage:nth-child(5) { animation-delay: 0.6s; }
+  .stage:nth-child(6) { animation-delay: 0.7s; }
+  .stage:nth-child(7) { animation-delay: 0.8s; }
+
+  /* Stage number dot */
+  .stage-dot {
+    position: absolute;
+    left: 16px;
+    top: 2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    z-index: 1;
+  }
+  .stage-dot.source  { background: var(--source-bg);  color: var(--source-text);  border: 1.5px solid var(--source-border); }
+  .stage-dot.filter  { background: var(--filter-bg);  color: var(--filter-text);  border: 1.5px solid var(--filter-border); }
+  .stage-dot.enrich  { background: var(--enrich-bg);  color: var(--enrich-text);  border: 1.5px solid var(--enrich-border); }
+  .stage-dot.rules   { background: var(--rules-bg);   color: var(--rules-text);   border: 1.5px solid var(--rules-border); }
+  .stage-dot.neutral { background: var(--bg-subtle);  color: var(--text-secondary); border: 1.5px solid var(--border); }
+  .stage-dot.score   { background: var(--score-bg);   color: var(--score-text);   border: 1.5px solid var(--score-border); }
+  .stage-dot.output  { background: var(--output-bg);  color: var(--output-text);  border: 1.5px solid var(--output-border); }
+
+  /* Stage header */
+  .stage-header {
+    margin-bottom: 14px;
+  }
+  .stage-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 2px;
+  }
+  .stage-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* Cards grid */
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .card {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 180px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  }
+
+  .card.full  { flex: 1 1 100%; }
+  .card.third { flex: 1 1 calc(33.333% - 8px); min-width: 140px; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .card-sub {
+    font-size: 12px;
+  }
+
+  .card.source  { background: var(--source-bg);  border-color: var(--source-border); }
+  .card.source  .card-title { color: var(--source-text); }
+  .card.source  .card-sub   { color: var(--source-sub); }
+
+  .card.enrich  { background: var(--enrich-bg);  border-color: var(--enrich-border); }
+  .card.enrich  .card-title { color: var(--enrich-text); }
+  .card.enrich  .card-sub   { color: var(--enrich-sub); }
+
+  .card.rules   { background: var(--rules-bg);   border-color: var(--rules-border); }
+  .card.rules   .card-title { color: var(--rules-text); }
+  .card.rules   .card-sub   { color: var(--rules-sub); }
+
+  .card.score   { background: var(--score-bg);   border-color: var(--score-border); }
+  .card.score   .card-title { color: var(--score-text); }
+  .card.score   .card-sub   { color: var(--score-sub); }
+
+  .card.filter  { background: var(--filter-bg);  border-color: var(--filter-border); }
+  .card.filter  .card-title { color: var(--filter-text); }
+  .card.filter  .card-sub   { color: var(--filter-sub); }
+
+  .card.output  { background: var(--output-bg);  border-color: var(--output-border); }
+  .card.output  .card-title { color: var(--output-text); }
+  .card.output  .card-sub   { color: var(--output-sub); }
+
+  .card.neutral { background: var(--bg-subtle);  border-color: var(--border); }
+  .card.neutral .card-title { color: var(--text-primary); }
+  .card.neutral .card-sub   { color: var(--text-secondary); }
+
+  /* Enrich container wrap */
+  .enrich-wrap {
+    background: var(--enrich-container);
+    border: 1.5px dashed var(--enrich-container-border);
+    border-radius: 14px;
+    padding: 16px 14px;
+  }
+  .enrich-wrap .cards + .cards {
+    margin-top: 10px;
+  }
+
+  /* Discard sidebar */
+  .discard-list {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--discard-soft);
+    border-radius: 8px;
+    border-left: 3px solid var(--discard);
+  }
+  .discard-list-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--discard);
+    margin-bottom: 6px;
+  }
+  .discard-list ul {
+    list-style: none;
+    padding: 0;
+  }
+  .discard-list li {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 2px 0;
+    padding-left: 12px;
+    position: relative;
+  }
+  .discard-list li::before {
+    content: '✕';
+    position: absolute;
+    left: 0;
+    color: var(--discard);
+    font-weight: 600;
+  }
+
+  /* Score weights */
+  .score-weights {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .weight-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--score-bg);
+    border: 1px solid var(--score-border);
+    color: var(--score-text);
+    white-space: nowrap;
+  }
+
+  /* Lanes footer */
+  .lanes-footer {
+    margin-top: 48px;
+    padding: 20px 24px;
+    background: var(--bg-subtle);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .lanes-footer h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+  .lane-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lane-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .tier-row {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .tier-row span.label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-right: 4px;
+  }
+  .tier-best { background: var(--enrich-bg); border-color: var(--enrich-border); color: var(--enrich-text); }
+  .tier-mid  { background: var(--score-bg);  border-color: var(--score-border);  color: var(--score-text); }
+  .tier-weak { background: var(--filter-bg); border-color: var(--filter-border); color: var(--filter-text); }
+
+  /* Branding */
+  .brand-footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .brand-footer strong {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-badge">Xemory Systems</div>
+    <h1>Lead pipeline</h1>
+    <p>Automated discovery, enrichment, and scoring of private-company leads from public data sources.</p>
+  </div>
+
+  <div class="pipeline">
+
+    <!-- Stage 1: Collect -->
+    <div class="stage">
+      <div class="stage-dot source">01</div>
+      <div class="stage-header">
+        <h2>Collect</h2>
+        <p>Pull raw leads from public data sources. 3× overfetch to account for downstream attrition.</p>
+      </div>
+      <div class="cards">
+        <div class="card source">
+          <div class="card-title">CourtListener</div>
+          <div class="card-sub">Bankruptcy filings via API</div>
+        </div>
+        <div class="card source">
+          <div class="card-title">Court RSS</div>
+          <div class="card-sub">Bankruptcy case feeds</div>
+        </div>
+        <div class="card source">
+          <div class="card-title">FDIC failed banks</div>
+          <div class="card-sub">Charged-off lane signals</div>
+        </div>
+        <div class="card source">
+          <div class="card-title">CFPB complaints</div>
+          <div class="card-sub">Consumer distress signals</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 1b: Pre-filter -->
+    <div class="stage">
+      <div class="stage-dot filter">1b</div>
+      <div class="stage-header">
+        <h2>Pre-filter</h2>
+        <p>Company type gate runs before enrichment to avoid wasting API calls on irrelevant leads.</p>
+      </div>
+      <div class="cards">
+        <div class="card filter full">
+          <div class="card-title">Company type filter</div>
+          <div class="card-sub">Reject leads that don't match target company types before any enrichment runs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 2: Enrich -->
+    <div class="stage">
+      <div class="stage-dot enrich">02</div>
+      <div class="stage-header">
+        <h2>Enrich</h2>
+        <p>Layer on firmographic, contact, and verification data from multiple sources.</p>
+      </div>
+      <div class="enrich-wrap">
+        <div class="cards">
+          <div class="card enrich">
+            <div class="card-title">Company enrichment</div>
+            <div class="card-sub">Firmographic data, size, industry</div>
+          </div>
+          <div class="card enrich">
+            <div class="card-title">Contact enrichment</div>
+            <div class="card-sub">Decision-maker names and titles</div>
+          </div>
+        </div>
+        <div class="cards">
+          <div class="card enrich full">
+            <div class="card-title">Web enrichment</div>
+            <div class="card-sub">Fill gaps — find websites and phone numbers for leads missing them</div>
+          </div>
+        </div>
+        <div class="cards">
+          <div class="card enrich full">
+            <div class="card-title">OpenCorporates</div>
+            <div class="card-sub">Entity identity verification — confirm the company is who they say they are</div>
+          </div>
+        </div>
+        <div class="cards">
+          <div class="card enrich">
+            <div class="card-title">SEC EDGAR</div>
+            <div class="card-sub">Detect public companies (triggers discard)</div>
+          </div>
+          <div class="card enrich">
+            <div class="card-title">PACER verify</div>
+            <div class="card-sub">Deeper case validation (bankruptcy lane)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 3: Rules -->
+    <div class="stage">
+      <div class="stage-dot rules">03</div>
+      <div class="stage-header">
+        <h2>Rules engine</h2>
+        <p>Recompute quality tiers from actual fields, then apply discard rules. Never trusts input tier values.</p>
+      </div>
+      <div class="cards">
+        <div class="card rules full">
+          <div class="card-title">Quality tier assignment + discard rules</div>
+          <div class="card-sub">Best case (6 fields) → mid-level (4 core) → weak (anything less)</div>
+        </div>
+      </div>
+      <div class="discard-list">
+        <div class="discard-list-title">Discard rules</div>
+        <ul>
+          <li>Weak quality — missing critical fields</li>
+          <li>Excluded state for lane</li>
+          <li>Public company confirmed via SEC EDGAR</li>
+          <li>Trustee-related entity</li>
+          <li>Non-target bankruptcy chapter</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Stage 4: Dedupe -->
+    <div class="stage">
+      <div class="stage-dot neutral">04</div>
+      <div class="stage-header">
+        <h2>Deduplicate</h2>
+        <p>Multi-key identity matching. On collision, the stronger lead wins.</p>
+      </div>
+      <div class="cards">
+        <div class="card neutral full">
+          <div class="card-title">Domain → phone → name+state</div>
+          <div class="card-sub">Priority-ordered key matching. Ties broken by quality tier, then confidence score, then field count.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 5: Score -->
+    <div class="stage">
+      <div class="stage-dot score">05</div>
+      <div class="stage-header">
+        <h2>Confidence scoring</h2>
+        <p>Transparent, weighted 0–100 score. Every lead carries a full breakdown explaining its score.</p>
+      </div>
+      <div class="cards">
+        <div class="card score full">
+          <div class="card-title">Weighted field scoring</div>
+          <div class="card-sub">Sorted by quality tier first, then score descending within each tier.</div>
+        </div>
+      </div>
+      <div class="score-weights">
+        <span class="weight-pill">+15 company name</span>
+        <span class="weight-pill">+15 website</span>
+        <span class="weight-pill">+15 phone</span>
+        <span class="weight-pill">+15 reason qualified</span>
+        <span class="weight-pill">+10 named contact</span>
+        <span class="weight-pill">+10 contact title</span>
+        <span class="weight-pill">+10 employee range</span>
+        <span class="weight-pill">+5 distress signal</span>
+        <span class="weight-pill">+5 financing signal</span>
+      </div>
+    </div>
+
+    <!-- Stage 6: Filter + limit -->
+    <div class="stage">
+      <div class="stage-dot filter">06</div>
+      <div class="stage-header">
+        <h2>Quality + limit filter</h2>
+        <p>Optional minimum quality tier gate, then cap at the requested result count.</p>
+      </div>
+      <div class="cards">
+        <div class="card filter full">
+          <div class="card-title">Final output gate</div>
+          <div class="card-sub">Only best_case and mid_level leads pass through when min-quality is set</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 7: Output -->
+    <div class="stage">
+      <div class="stage-dot output">07</div>
+      <div class="stage-header">
+        <h2>Output</h2>
+        <p>Export enriched, scored leads in your preferred format. Discards are logged separately for audit.</p>
+      </div>
+      <div class="cards">
+        <div class="card output third">
+          <div class="card-title">JSON</div>
+          <div class="card-sub">Structured data</div>
+        </div>
+        <div class="card output third">
+          <div class="card-title">Excel workbook</div>
+          <div class="card-sub">4-sheet report</div>
+        </div>
+        <div class="card output third">
+          <div class="card-title">Text summary</div>
+          <div class="card-sub">Quick overview</div>
+        </div>
+      </div>
+      <div style="margin-top: 10px;">
+        <div class="cards">
+          <div class="card neutral full">
+            <div class="card-title">Discards log</div>
+            <div class="card-sub">Full audit trail — every rejected lead with the rule that caught it</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Lanes footer -->
+  <div class="lanes-footer">
+    <h3>Supported lanes</h3>
+    <div class="lane-tags">
+      <span class="lane-tag">bankruptcy</span>
+      <span class="lane-tag">charged_off</span>
+      <span class="lane-tag">performing</span>
+      <span class="lane-tag">capital_seeking</span>
+    </div>
+    <div class="tier-row">
+      <span class="label">Quality tiers:</span>
+      <span class="lane-tag tier-best">best_case</span>
+      <span class="lane-tag tier-mid">mid_level</span>
+      <span class="lane-tag tier-weak">weak</span>
+    </div>
+  </div>
+
+  <div class="brand-footer">
+    Built by <strong>Xemory Systems</strong>
+  </div>
+
+</div>
+</body>
+</html>
