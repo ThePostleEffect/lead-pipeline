@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+.env.*
+*.secret
+*.token
+
+# Pipeline outputs and database (regenerated, not source)
+data/output/
+data/pipeline.db
+data/pipeline.db-shm
+data/pipeline.db-wal
+
+# Claude Code local settings
+.claude/
+
+# Build artifacts
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store

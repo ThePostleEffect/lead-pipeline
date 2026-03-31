@@ -1,0 +1,78 @@
+# Lead Pipeline — Rules Configuration
+# =============================================
+
+lanes:
+  charged_off:
+    description: "Private companies selling or likely selling charged-off debt"
+    excluded_states: [TX, NC, SC, PA, AZ, CA]
+
+  bankruptcy:
+    description: "Chapter 13 bankruptcy leads — private companies only"
+    excluded_states: []
+
+  performing:
+    description: "Private companies with performing portfolios"
+    excluded_states: []
+
+  capital_seeking:
+    description: "Private companies actively looking for capital, lines of credit, bridge funding, working capital, inventory financing, short-term operating capital"
+    excluded_states: [HI, AK]
+
+quality:
+  best_case:
+    required_fields:
+      - company_name
+      - website
+      - business_phone
+      - reason_qualified
+      - named_contact
+      - contact_title
+    description: "All core + contact fields present"
+
+  mid_level:
+    required_fields:
+      - company_name
+      - website
+      - business_phone
+      - reason_qualified
+    description: "Core fields present, contact info may be missing"
+
+  weak:
+    description: "Missing business_phone, website, or reason_qualified"
+
+discard_rules:
+  - name: weak_quality
+    condition: "quality_tier == weak"
+    description: "Discard any lead with weak quality tier"
+
+  - name: excluded_state
+    condition: "state in excluded_states for lead_lane"
+    description: "Discard leads in states excluded for their lane"
+
+  - name: public_company
+    condition: "public_company_confirmed == true"
+    description: "Only private companies — discard public companies and listed issuers"
+
+  - name: trustee
+    condition: "trustee_related == true"
+    description: "Exclude trustees entirely"
+
+  - name: non_target_bankruptcy_chapter
+    condition: "lead_lane == bankruptcy AND bankruptcy_chapter NOT IN (13, 7)"
+    description: "Bankruptcy lane focuses on Ch.13; Ch.7 allowed as potential Ch.13 crossover — discard Ch.11, Ch.12, and unknown chapter leads"
+
+scoring:
+  weights:
+    company_name: 15
+    website: 15
+    business_phone: 15
+    reason_qualified: 15
+    named_contact: 10
+    contact_title: 10
+    preferred_employee_range: 10
+    distress_signal: 5
+    financing_signal: 5
+
+  preferred_employee_range:
+    min: 10
+    max: 50
