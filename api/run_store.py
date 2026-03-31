@@ -73,6 +73,17 @@ def _init_db(conn: sqlite3.Connection) -> None:
         )
     """)
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS lead_index (
+            key_type     TEXT NOT NULL,
+            key_value    TEXT NOT NULL,
+            run_id       TEXT NOT NULL,
+            lane         TEXT NOT NULL,
+            company_name TEXT NOT NULL,
+            indexed_at   TEXT NOT NULL,
+            PRIMARY KEY (key_type, key_value)
+        )
+    """)
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS schedules (
             schedule_id    TEXT PRIMARY KEY,
             name           TEXT NOT NULL,
@@ -182,3 +193,40 @@ def list_runs() -> list[RunResponse]:
         f"SELECT {_META_SELECT} FROM runs ORDER BY created_at DESC"
     ).fetchall()
     return [RunResponse(**dict(row)) for row in rows]
+
+
+def get_seen_keys() -> dict[str, tuple[str, str]]:
+    """Return all dedup keys across completed runs.
+
+    Returns a dict mapping key_str -> (run_id, lane), e.g.:
+      "domain:example.com" -> ("RUN-ABC123", "bankruptcy")
+    """
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT key_type, key_value, run_id, lane FROM lead_index"
+    ).fetchall()
+    return {
+        f"{row['key_type']}:{row['key_value']}": (row["run_id"], row["lane"])
+        for row in rows
+    }
+
+
+def index_run_leads(
+    run_id: str,
+    lane: str,
+    key_entries: list[tuple[str, str, str]],
+) -> None:
+    """Persist a run's lead dedup keys to the index.
+
+    key_entries: list of (key_type, key_value, company_name) tuples.
+    Uses INSERT OR IGNORE — the first run to claim a key wins.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    conn = _get_conn()
+    conn.executemany(
+        """INSERT OR IGNORE INTO lead_index
+               (key_type, key_value, run_id, lane, company_name, indexed_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        [(kt, kv, run_id, lane, name, now) for kt, kv, name in key_entries],
+    )
+    conn.commit()

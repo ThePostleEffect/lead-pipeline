@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from api.models import CollectRequest
-from api.run_store import update_run
+from api.run_store import get_seen_keys, index_run_leads, update_run
 from app.config import DATA_OUTPUT
 from app.models import DiscardRecord, SearchFilters
 
@@ -50,6 +50,9 @@ def _execute_collect(run_id: str, request: CollectRequest, source_path: Path | N
             filter_kwargs["company_types"] = [t.strip() for t in request.company_types.split(",")]
         search_filters = SearchFilters(**filter_kwargs) if filter_kwargs else None
 
+        # Load prior-run dedup keys before running so we can flag repeats
+        seen_keys = get_seen_keys()
+
         leads, source_logs = run_collect(
             lane=request.lane,
             limit=request.limit,
@@ -62,11 +65,49 @@ def _execute_collect(run_id: str, request: CollectRequest, source_path: Path | N
             search_filters=search_filters,
         )
 
+        # Cross-run deduplication — flag leads seen in previous runs
+        from app.dedupe import lead_keys as get_lead_keys
+        cross_run_discards: list[dict] = []
+        if leads and seen_keys:
+            still_unique = []
+            for lead in leads:
+                matched = get_lead_keys(lead) & set(seen_keys.keys())
+                if matched:
+                    key = next(iter(matched))
+                    prior_run_id, prior_lane = seen_keys[key]
+                    cross_run_discards.append({
+                        "lead_id": lead.lead_id,
+                        "company_name": lead.company_name,
+                        "lead_lane": lead.lead_lane.value,
+                        "state": lead.state,
+                        "quality_tier": lead.quality_tier.value,
+                        "website": lead.website,
+                        "business_phone": lead.business_phone,
+                        "reason": f"Previously collected in {prior_run_id} ({prior_lane} lane)",
+                        "rule": "cross_run_duplicate",
+                    })
+                    logger.info(
+                        "Cross-run dedup: '%s' already in %s (%s lane)",
+                        lead.company_name, prior_run_id, prior_lane,
+                    )
+                else:
+                    still_unique.append(lead)
+            leads = still_unique
+
         # Read discards back from file (run_collect writes them, doesn't return them)
         discards: list[dict] = []
         if request.save_discards and discards_file.exists():
             raw = json.loads(discards_file.read_text(encoding="utf-8"))
             discards = raw if isinstance(raw, list) else []
+
+        # Merge cross-run discards and re-write the file if needed
+        if cross_run_discards:
+            discards.extend(cross_run_discards)
+            if request.save_discards:
+                discards_file.parent.mkdir(parents=True, exist_ok=True)
+                discards_file.write_text(
+                    json.dumps(discards, indent=2, default=str), encoding="utf-8"
+                )
 
         # Optional Excel export
         xlsx_path: Path | None = None
@@ -90,6 +131,16 @@ def _execute_collect(run_id: str, request: CollectRequest, source_path: Path | N
             discards=discards,
             source_logs=[sl.model_dump(mode="json") for sl in source_logs],
         )
+
+        # Index kept leads so future runs can detect cross-run duplicates
+        if leads:
+            key_entries: list[tuple[str, str, str]] = []
+            for lead in leads:
+                for key_str in get_lead_keys(lead):
+                    key_type, key_value = key_str.split(":", 1)
+                    key_entries.append((key_type, key_value, lead.company_name))
+            if key_entries:
+                index_run_leads(run_id, request.lane, key_entries)
 
         logger.info("Run %s completed: %d kept, %d discarded", run_id, len(leads), len(discards))
 

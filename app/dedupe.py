@@ -117,6 +117,22 @@ def _unregister(lead: Lead, idx: int,
 
 # ── Public API ──────────────────────────────────────────────────────────
 
+def lead_keys(lead: Lead) -> set[str]:
+    """Return the set of dedup key strings for a lead.
+
+    Format: 'domain:example.com', 'phone:5551234567', 'name_state:acme|FL'
+    Used by cross-run deduplication to check against the persistent lead index.
+    """
+    keys: set[str] = set()
+    d = _domain_key(lead)
+    p = _phone_key(lead)
+    ns = _name_state_key(lead)
+    if d:  keys.add(f"domain:{d}")
+    if p:  keys.add(f"phone:{p}")
+    if ns: keys.add(f"name_state:{ns}")
+    return keys
+
+
 def deduplicate(leads: list[Lead]) -> list[Lead]:
     """Remove duplicates using multi-key matching.
 
