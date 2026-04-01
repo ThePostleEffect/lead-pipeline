@@ -43,15 +43,34 @@ export interface Lead {
 }
 
 export interface DiscardRecord {
+  // Discard metadata
+  reason: string
+  rule: string
+  // Full lead fields
   lead_id: string
   company_name: string
   lead_lane: string
+  portfolio_type: string
   state: string
+  city: string
   quality_tier: string
+  confidence_score: number
   website: string
   business_phone: string
-  reason: string
-  rule: string
+  reason_qualified: string
+  notes: string
+  source_type: string
+  source_url: string
+  named_contact: string | null
+  contact_title: string | null
+  employee_estimate: number | null
+  distress_signal: string | null
+  financing_signal: string | null
+  bankruptcy_chapter: string | null
+  private_company_confirmed: boolean
+  public_company_confirmed: boolean
+  trustee_related: boolean
+  collected_at: string
 }
 
 export interface RunResponse {

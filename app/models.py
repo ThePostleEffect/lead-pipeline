@@ -105,14 +105,34 @@ class SourceLog(BaseModel):
 
 
 class DiscardRecord(BaseModel):
-    """Records why a lead was discarded — includes enough metadata to debug."""
+    """Records why a lead was discarded — carries full lead data for display."""
 
+    # Discard metadata
+    reason: str
+    rule: str
+
+    # Full lead fields (mirrors Lead — populated so discards can be displayed like kept leads)
     lead_id: str
     company_name: str
     lead_lane: str = ""
+    portfolio_type: str = ""
     state: str = ""
+    city: str = ""
     quality_tier: str = ""
+    confidence_score: float = 0.0
     website: str = ""
     business_phone: str = ""
-    reason: str
-    rule: str
+    reason_qualified: str = ""
+    notes: str = ""
+    source_type: str = ""
+    source_url: str = ""
+    named_contact: Optional[str] = None
+    contact_title: Optional[str] = None
+    employee_estimate: Optional[int] = None
+    distress_signal: Optional[str] = None
+    financing_signal: Optional[str] = None
+    bankruptcy_chapter: Optional[str] = None
+    private_company_confirmed: bool = False
+    public_company_confirmed: bool = False
+    trustee_related: bool = False
+    collected_at: str = ""

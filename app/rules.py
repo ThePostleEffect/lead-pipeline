@@ -57,17 +57,34 @@ def recompute_quality_tiers(leads: list[Lead]) -> list[Lead]:
 # ── Discard rules ───────────────────────────────────────────────────────
 
 def _make_discard(lead: Lead, reason: str, rule: str) -> DiscardRecord:
-    """Build a DiscardRecord with full lead metadata for debugging."""
+    """Build a DiscardRecord carrying full lead data for display."""
     return DiscardRecord(
+        reason=reason,
+        rule=rule,
         lead_id=lead.lead_id,
         company_name=lead.company_name,
         lead_lane=lead.lead_lane.value,
+        portfolio_type=lead.portfolio_type,
         state=lead.state,
+        city=lead.city,
         quality_tier=lead.quality_tier.value,
+        confidence_score=lead.confidence_score,
         website=lead.website,
         business_phone=lead.business_phone,
-        reason=reason,
-        rule=rule,
+        reason_qualified=lead.reason_qualified,
+        notes=lead.notes,
+        source_type=lead.source_type.value,
+        source_url=lead.source_url,
+        named_contact=lead.named_contact,
+        contact_title=lead.contact_title,
+        employee_estimate=lead.employee_estimate,
+        distress_signal=lead.distress_signal,
+        financing_signal=lead.financing_signal,
+        bankruptcy_chapter=lead.bankruptcy_chapter,
+        private_company_confirmed=lead.private_company_confirmed,
+        public_company_confirmed=lead.public_company_confirmed,
+        trustee_related=lead.trustee_related,
+        collected_at=lead.collected_at,
     )
 
 

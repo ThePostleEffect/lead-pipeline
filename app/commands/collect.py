@@ -112,15 +112,32 @@ def run_collect(
         label = "+".join(filters.company_types)
         type_filter_discards = [
             DiscardRecord(
+                reason=f"Company type does not match filter: {label}",
+                rule="company_type_filter",
                 lead_id=ld.lead_id,
                 company_name=ld.company_name,
                 lead_lane=ld.lead_lane.value,
+                portfolio_type=ld.portfolio_type,
                 state=ld.state,
+                city=ld.city,
                 quality_tier=ld.quality_tier.value,
+                confidence_score=ld.confidence_score,
                 website=ld.website,
                 business_phone=ld.business_phone,
-                reason=f"Company type does not match filter: {label}",
-                rule="company_type_filter",
+                reason_qualified=ld.reason_qualified,
+                notes=ld.notes,
+                source_type=ld.source_type.value,
+                source_url=ld.source_url,
+                named_contact=ld.named_contact,
+                contact_title=ld.contact_title,
+                employee_estimate=ld.employee_estimate,
+                distress_signal=ld.distress_signal,
+                financing_signal=ld.financing_signal,
+                bankruptcy_chapter=ld.bankruptcy_chapter,
+                private_company_confirmed=ld.private_company_confirmed,
+                public_company_confirmed=ld.public_company_confirmed,
+                trustee_related=ld.trustee_related,
+                collected_at=ld.collected_at,
             )
             for ld in rejected
         ]
