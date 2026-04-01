@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useRunStore } from '../../stores/runStore'
 import { TopBar } from './TopBar'
 import { TabBar } from './TabBar'
@@ -7,11 +8,31 @@ import { LeadDrawer } from '../detail/LeadDrawer'
 import { DiscardsTable } from '../discards/DiscardsTable'
 import { RulesView } from '../rules/RulesView'
 import { SchedulesView } from '../schedules/SchedulesView'
+import { FishermanLoader } from '../shared/FishermanLoader'
 import { downloadXlsx, downloadJson } from '../../api/client'
 import { FileSpreadsheet, FileJson } from 'lucide-react'
 
 export function AppShell() {
-  const { activeTab, setActiveTab, leads, discards, currentRun, selectedLeadId } = useRunStore()
+  const { activeTab, setActiveTab, leads, discards, currentRun, selectedLeadId, isRunning } = useRunStore()
+
+  // Track reeling phase: fires briefly when run completes before loader unmounts
+  const [reeling, setReeling] = useState(false)
+  const [showLoader, setShowLoader] = useState(false)
+  const wasRunning = useRef(false)
+
+  useEffect(() => {
+    if (isRunning) {
+      setShowLoader(true)
+      setReeling(false)
+      wasRunning.current = true
+    } else if (wasRunning.current) {
+      // Run just finished — play reel animation then hide loader
+      setReeling(true)
+      wasRunning.current = false
+      const t = setTimeout(() => setShowLoader(false), 1900)
+      return () => clearTimeout(t)
+    }
+  }, [isRunning])
 
   const hasRun = currentRun?.status === 'completed'
 
@@ -48,12 +69,18 @@ export function AppShell() {
       />
 
       {/* Content area */}
-      <main className="flex-1 overflow-hidden">
-        {activeTab === 'results' && <ResultsTable />}
-        {activeTab === 'discards' && <DiscardsTable />}
-        {activeTab === 'rules' && <RulesView />}
-        {activeTab === 'schedules' && <SchedulesView />}
-        {activeTab === 'activity' && <RulesView />}
+      <main className="flex-1 overflow-hidden relative">
+        {showLoader ? (
+          <FishermanLoader reeling={reeling} />
+        ) : (
+          <>
+            {activeTab === 'results' && <ResultsTable />}
+            {activeTab === 'discards' && <DiscardsTable />}
+            {activeTab === 'rules' && <RulesView />}
+            {activeTab === 'schedules' && <SchedulesView />}
+            {activeTab === 'activity' && <RulesView />}
+          </>
+        )}
       </main>
 
       {/* Detail drawer */}
