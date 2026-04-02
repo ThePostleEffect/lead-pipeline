@@ -92,9 +92,8 @@ def check_discard(lead: Lead, rules: dict[str, Any]) -> DiscardRecord | None:
     """Apply all discard rules. Return a DiscardRecord if the lead should be
     thrown away, or None if it should be kept.
 
-    Mid-level and best-case leads are only discarded for hard failures
-    (public company, trustee). Soft rules like excluded state and wrong
-    bankruptcy chapter only apply to weak-quality leads.
+    Hard rules (apply to all quality tiers): public company, trustee, excluded state.
+    Soft rules (skip for mid-level+): weak quality gate, non-target bankruptcy chapter.
     """
     is_actionable = lead.quality_tier in (QualityTier.MID_LEVEL, QualityTier.BEST_CASE)
 
@@ -122,15 +121,14 @@ def check_discard(lead: Lead, rules: dict[str, Any]) -> DiscardRecord | None:
             rule="trustee",
         )
 
-    # Rule 4: excluded state — soft rule, skip for mid-level+ leads
-    if not is_actionable:
-        excluded = get_excluded_states(rules, lead.lead_lane.value)
-        if lead.state.upper() in excluded:
-            return _make_discard(
-                lead,
-                reason=f"State {lead.state} excluded for lane {lead.lead_lane.value}",
-                rule="excluded_state",
-            )
+    # Rule 4: excluded state — hard rule, applies regardless of quality
+    excluded = get_excluded_states(rules, lead.lead_lane.value)
+    if lead.state.upper() in excluded:
+        return _make_discard(
+            lead,
+            reason=f"State {lead.state} excluded for lane {lead.lead_lane.value}",
+            rule="excluded_state",
+        )
 
     # Rule 5: non-target bankruptcy chapter — soft rule, skip for mid-level+ leads
     if not is_actionable and lead.lead_lane == LeadLane.BANKRUPTCY:
