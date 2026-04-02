@@ -32,6 +32,7 @@ LEAD_INBOX_COLUMNS: list[str] = [
     "city",
     "website",
     "business_phone",
+    "email",
     "named_contact",
     "contact_title",
     "employee_estimate",

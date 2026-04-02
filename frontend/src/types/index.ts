@@ -25,6 +25,7 @@ export interface Lead {
   city: string
   website: string
   business_phone: string
+  email: string | null
   reason_qualified: string
   quality_tier: QualityTier
   confidence_score: number
@@ -57,6 +58,7 @@ export interface DiscardRecord {
   confidence_score: number
   website: string
   business_phone: string
+  email: string | null
   reason_qualified: string
   notes: string
   source_type: string

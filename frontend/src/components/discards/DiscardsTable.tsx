@@ -37,6 +37,7 @@ export function DiscardsTable() {
             <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">City</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">Website</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">Phone</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">Email</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">Contact</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">Title</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap">Employees</th>
@@ -88,6 +89,13 @@ export function DiscardsTable() {
               </td>
               <td className="px-4 py-2.5 text-[var(--color-text-muted)] whitespace-nowrap">
                 {d.business_phone || '--'}
+              </td>
+              <td className="px-4 py-2.5 whitespace-nowrap">
+                {d.email ? (
+                  <a href={`mailto:${d.email}`} className="text-xs text-[var(--color-accent)] hover:underline font-mono">
+                    {d.email}
+                  </a>
+                ) : '--'}
               </td>
               <td className="px-4 py-2.5 text-[var(--color-text-muted)] whitespace-nowrap">
                 {d.named_contact || '--'}

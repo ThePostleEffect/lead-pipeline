@@ -23,6 +23,7 @@ from app.enrich.contact_enrichment import enrich_contacts
 from app.enrich.opencorporates import enrich_leads_opencorporates
 from app.enrich.pacer_verify import enrich_leads_pacer
 from app.enrich.sec_edgar import enrich_leads_sec_edgar
+from app.enrich.email_enrichment import enrich_leads_with_emails
 from app.enrich.web_enrichment import enrich_leads_from_web
 from app.models import DiscardRecord, Lead, LeadLane, SearchFilters, SourceLog
 from app.rules import apply_rules
@@ -159,13 +160,16 @@ def run_collect(
     # 2b. Web enrichment — find websites/phones for leads missing them
     leads = enrich_leads_from_web(leads)
 
-    # 2c. Entity verification — confirm company identity via OpenCorporates
+    # 2c. Email enrichment — scrape websites for emails, fall back to info@ guess
+    leads = enrich_leads_with_emails(leads)
+
+    # 2d. Entity verification — confirm company identity via OpenCorporates
     leads = enrich_leads_opencorporates(leads)
 
-    # 2d. SEC EDGAR — detect public companies (triggers discard rule)
+    # 2e. SEC EDGAR — detect public companies (triggers discard rule)
     leads = enrich_leads_sec_edgar(leads)
 
-    # 2e. PACER verification — deeper case validation (bankruptcy lane only, needs credentials)
+    # 2f. PACER verification — deeper case validation (bankruptcy lane only, needs credentials)
     leads = enrich_leads_pacer(leads)
 
     # 3. Apply rules (recomputes quality tier from fields, then discards)

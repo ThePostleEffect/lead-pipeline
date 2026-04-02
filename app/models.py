@@ -74,6 +74,9 @@ class Lead(BaseModel):
     financing_signal: Optional[str] = None
     bankruptcy_chapter: Optional[str] = None
 
+    # Contact email
+    email: Optional[str] = None
+
     # Scoring explainability
     score_breakdown: list[dict[str, Any]] = Field(default_factory=list)
     score_reasons: list[str] = Field(default_factory=list)
@@ -136,3 +139,4 @@ class DiscardRecord(BaseModel):
     public_company_confirmed: bool = False
     trustee_related: bool = False
     collected_at: str = ""
+    email: Optional[str] = None

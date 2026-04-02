@@ -133,6 +133,7 @@ export function ResultsTable() {
               <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">City</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">Website</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">Phone</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">Email</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">Contact</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">Title</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-[var(--color-text-muted)]">Employees</th>
@@ -192,6 +193,19 @@ export function ResultsTable() {
                 {/* Phone */}
                 <td className="px-3 py-2.5 text-[var(--color-text-muted)] font-mono text-xs whitespace-nowrap">
                   {lead.business_phone || '--'}
+                </td>
+
+                {/* Email */}
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  {lead.email ? (
+                    <a
+                      href={`mailto:${lead.email}`}
+                      className="text-xs text-[var(--color-accent)] hover:underline font-mono"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {lead.email}
+                    </a>
+                  ) : '--'}
                 </td>
 
                 {/* Contact */}
