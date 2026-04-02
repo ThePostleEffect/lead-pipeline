@@ -155,6 +155,12 @@ export async function deleteSchedule(scheduleId: string): Promise<void> {
   await fetch(`${BASE}/schedules/${scheduleId}`, { method: 'DELETE' })
 }
 
+// ---- Discard Vault ----
+
+export async function getVaultDiscards(): Promise<DiscardRecord[]> {
+  return request<DiscardRecord[]>('/discards')
+}
+
 // ---- Polling ----
 
 export function pollRunStatus(

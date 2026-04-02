@@ -73,6 +73,13 @@ def _init_db(conn: sqlite3.Connection) -> None:
         )
     """)
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS global_discards (
+            lead_id      TEXT PRIMARY KEY,
+            discarded_at TEXT NOT NULL,
+            data         TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS lead_index (
             key_type     TEXT NOT NULL,
             key_value    TEXT NOT NULL,
@@ -193,6 +200,41 @@ def list_runs() -> list[RunResponse]:
         f"SELECT {_META_SELECT} FROM runs ORDER BY created_at DESC"
     ).fetchall()
     return [RunResponse(**dict(row)) for row in rows]
+
+
+_VAULT_MAX = 100
+
+
+def push_global_discards(discards: list[dict[str, Any]]) -> None:
+    """Insert discards into the rolling vault, then trim to the 100 most recent."""
+    if not discards:
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    conn = _get_conn()
+    conn.executemany(
+        """INSERT OR REPLACE INTO global_discards (lead_id, discarded_at, data)
+           VALUES (?, ?, ?)""",
+        [(d.get("lead_id", ""), now, json.dumps(d, default=str)) for d in discards],
+    )
+    # Trim: keep only the most recent _VAULT_MAX rows
+    conn.execute("""
+        DELETE FROM global_discards
+        WHERE lead_id NOT IN (
+            SELECT lead_id FROM global_discards
+            ORDER BY discarded_at DESC
+            LIMIT ?
+        )
+    """, (_VAULT_MAX,))
+    conn.commit()
+
+
+def get_global_discards() -> list[dict[str, Any]]:
+    """Return all vault discards, newest first."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT data FROM global_discards ORDER BY discarded_at DESC"
+    ).fetchall()
+    return [json.loads(row["data"]) for row in rows]
 
 
 def get_seen_keys() -> dict[str, tuple[str, str]]:

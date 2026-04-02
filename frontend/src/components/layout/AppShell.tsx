@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRunStore } from '../../stores/runStore'
+import { DiscardVault } from '../discards/DiscardVault'
 import { TopBar } from './TopBar'
 import { TabBar } from './TabBar'
 import { RunPanel } from '../run-panel/RunPanel'
@@ -14,6 +15,8 @@ import { FileSpreadsheet, FileJson } from 'lucide-react'
 
 export function AppShell() {
   const { activeTab, setActiveTab, leads, discards, currentRun, selectedLeadId, isRunning } = useRunStore()
+
+  const [vaultOpen, setVaultOpen] = useState(false)
 
   // Track reeling phase: fires briefly when run completes before loader unmounts
   const [reeling, setReeling] = useState(false)
@@ -38,7 +41,7 @@ export function AppShell() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <TopBar />
+      <TopBar vaultOpen={vaultOpen} onVaultToggle={() => setVaultOpen((v) => !v)} />
       <RunPanel />
 
       {/* Export bar */}
@@ -70,7 +73,9 @@ export function AppShell() {
 
       {/* Content area */}
       <main className="flex-1 overflow-hidden relative">
-        {showLoader ? (
+        {vaultOpen ? (
+          <DiscardVault />
+        ) : showLoader ? (
           <FishermanLoader reeling={reeling} />
         ) : (
           <>

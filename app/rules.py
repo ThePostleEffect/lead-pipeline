@@ -90,48 +90,55 @@ def _make_discard(lead: Lead, reason: str, rule: str) -> DiscardRecord:
 
 def check_discard(lead: Lead, rules: dict[str, Any]) -> DiscardRecord | None:
     """Apply all discard rules. Return a DiscardRecord if the lead should be
-    thrown away, or None if it should be kept."""
+    thrown away, or None if it should be kept.
 
-    # Rule 1: weak quality
+    Mid-level and best-case leads are only discarded for hard failures
+    (public company, trustee). Soft rules like excluded state and wrong
+    bankruptcy chapter only apply to weak-quality leads.
+    """
+    is_actionable = lead.quality_tier in (QualityTier.MID_LEVEL, QualityTier.BEST_CASE)
+
+    # Rule 1: weak quality — only applies to weak leads
     if lead.quality_tier == QualityTier.WEAK:
         return _make_discard(
             lead,
-            reason="Quality tier is weak — missing critical fields",
+            reason="Quality tier is weak — missing critical fields (company name, website, phone, or reason)",
             rule="weak_quality",
         )
 
-    # Rule 2: excluded state for lane
-    excluded = get_excluded_states(rules, lead.lead_lane.value)
-    if lead.state.upper() in excluded:
-        return _make_discard(
-            lead,
-            reason=f"State {lead.state} excluded for lane {lead.lead_lane.value}",
-            rule="excluded_state",
-        )
-
-    # Rule 3: public company
+    # Rule 2: public company — hard discard regardless of quality
     if lead.public_company_confirmed:
         return _make_discard(
             lead,
-            reason="Public company — only private companies allowed",
+            reason="Public company — only private companies targeted",
             rule="public_company",
         )
 
-    # Rule 4: trustee
+    # Rule 3: trustee — hard discard regardless of quality
     if lead.trustee_related:
         return _make_discard(
             lead,
-            reason="Trustee-related — excluded entirely",
+            reason="Trustee-related entity — excluded entirely",
             rule="trustee",
         )
 
-    # Rule 5: non-target bankruptcy chapter
-    if lead.lead_lane == LeadLane.BANKRUPTCY:
+    # Rule 4: excluded state — soft rule, skip for mid-level+ leads
+    if not is_actionable:
+        excluded = get_excluded_states(rules, lead.lead_lane.value)
+        if lead.state.upper() in excluded:
+            return _make_discard(
+                lead,
+                reason=f"State {lead.state} excluded for lane {lead.lead_lane.value}",
+                rule="excluded_state",
+            )
+
+    # Rule 5: non-target bankruptcy chapter — soft rule, skip for mid-level+ leads
+    if not is_actionable and lead.lead_lane == LeadLane.BANKRUPTCY:
         ch = (lead.bankruptcy_chapter or "").strip()
         if ch not in ("13", "7"):
             return _make_discard(
                 lead,
-                reason=f"Bankruptcy lane targets Ch.13 (Ch.7 allowed as potential Ch.13) — got chapter '{ch}' or unknown",
+                reason=f"Bankruptcy lane targets Ch.13/7 — got chapter '{ch}' or unknown",
                 rule="non_target_bankruptcy_chapter",
             )
 

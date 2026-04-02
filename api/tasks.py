@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from api.models import CollectRequest
-from api.run_store import get_seen_keys, index_run_leads, update_run
+from api.run_store import get_seen_keys, index_run_leads, push_global_discards, update_run
 from app.config import DATA_OUTPUT
 from app.models import DiscardRecord, SearchFilters
 
@@ -131,6 +131,10 @@ def _execute_collect(run_id: str, request: CollectRequest, source_path: Path | N
             discards=discards,
             source_logs=[sl.model_dump(mode="json") for sl in source_logs],
         )
+
+        # Push discards to rolling vault (capped at 100 across all runs)
+        if discards:
+            push_global_discards(discards)
 
         # Index kept leads so future runs can detect cross-run duplicates
         if leads:

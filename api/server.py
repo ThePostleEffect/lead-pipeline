@@ -8,7 +8,7 @@ load_dotenv()  # Load .env from project root before anything else
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import exports, health, leads, rules, runs, schedules
+from api.routes import discards, exports, health, leads, rules, runs, schedules
 
 
 def create_app() -> FastAPI:
@@ -37,6 +37,7 @@ def create_app() -> FastAPI:
     app.include_router(exports.router, prefix="/exports", tags=["exports"])
     app.include_router(health.router, prefix="/health", tags=["health"])
     app.include_router(schedules.router, prefix="/schedules", tags=["schedules"])
+    app.include_router(discards.router, prefix="/discards", tags=["discards"])
 
     @app.on_event("startup")
     def _start_scheduler() -> None:
