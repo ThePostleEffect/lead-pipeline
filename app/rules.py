@@ -19,27 +19,31 @@ logger = logging.getLogger(__name__)
 def assign_quality_tier(lead: Lead) -> QualityTier:
     """Compute quality tier from actual field values — never trust input.
 
-    Best-case: company_name, website, business_phone, reason_qualified,
-               named_contact, contact_title — all present.
-    Mid-level: company_name, website, business_phone, reason_qualified — all present.
-    Weak:      anything else.
+    Phone is the primary actionability signal — if you can call them, the
+    lead has value regardless of what other fields are missing.
+
+    Best-case: company_name + website + business_phone + reason_qualified
+               + named_contact + contact_title — fully enriched.
+    Mid-level: company_name + business_phone — minimum actionable lead.
+    Weak:      missing company_name or business_phone — not actionable.
     """
-    has_core = all([
-        lead.company_name.strip(),
-        lead.website.strip(),
-        lead.business_phone.strip(),
-        lead.reason_qualified.strip(),
-    ])
-    if not has_core:
+    # Without a company name or phone number the lead isn't actionable
+    if not lead.company_name.strip() or not lead.business_phone.strip():
         return QualityTier.WEAK
 
-    has_contact = all([
-        lead.named_contact and lead.named_contact.strip(),
-        lead.contact_title and lead.contact_title.strip(),
+    # Has phone — check for full enrichment to reach best-case
+    has_full_core = all([
+        lead.website.strip(),
+        lead.reason_qualified.strip(),
     ])
-    if has_contact:
-        return QualityTier.BEST_CASE
+    if has_full_core:
+        has_contact = all([
+            lead.named_contact and lead.named_contact.strip(),
+            lead.contact_title and lead.contact_title.strip(),
+        ])
+        return QualityTier.BEST_CASE if has_contact else QualityTier.MID_LEVEL
 
+    # Has company + phone but missing website/reason — still mid-level (phone is enough to act)
     return QualityTier.MID_LEVEL
 
 
@@ -85,6 +89,9 @@ def _make_discard(lead: Lead, reason: str, rule: str) -> DiscardRecord:
         public_company_confirmed=lead.public_company_confirmed,
         trustee_related=lead.trustee_related,
         collected_at=lead.collected_at,
+        email=lead.email,
+        score_breakdown=lead.score_breakdown,
+        score_reasons=lead.score_reasons,
     )
 
 

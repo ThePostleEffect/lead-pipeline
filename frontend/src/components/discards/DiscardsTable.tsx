@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { clsx } from 'clsx'
 import { LaneBadge, QualityBadge, ConfidenceScore, RuleBadge } from '../shared/Badge'
 import { EmptyState } from '../shared/EmptyState'
+import { DiscardDrawer } from '../detail/DiscardDrawer'
 import { useRunStore } from '../../stores/runStore'
+import type { DiscardRecord } from '../../types'
 
 function truncate(text: string, len = 60): string {
   if (!text) return '--'
@@ -20,6 +23,8 @@ function BoolDot({ value }: { value: boolean }) {
 
 export function DiscardsTable() {
   const { discards } = useRunStore()
+  const [selected, setSelected] = useState<DiscardRecord | null>(null)
+  const selectedIdx = selected ? discards.findIndex((d) => d.lead_id === selected.lead_id) : -1
 
   if (discards.length === 0) {
     return <EmptyState message="No discards to show." />
@@ -57,7 +62,8 @@ export function DiscardsTable() {
           {discards.map((d) => (
             <tr
               key={d.lead_id}
-              className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] opacity-70 hover:opacity-100 transition-opacity"
+              onClick={() => setSelected(d)}
+              className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
             >
               <td className="px-4 py-2.5 font-medium text-[var(--color-text)] whitespace-nowrap max-w-48 truncate">
                 {d.company_name}
@@ -141,5 +147,16 @@ export function DiscardsTable() {
         </tbody>
       </table>
     </div>
+
+    {selected && (
+      <DiscardDrawer
+        discard={selected}
+        index={selectedIdx}
+        total={discards.length}
+        onClose={() => setSelected(null)}
+        onPrev={() => selectedIdx > 0 && setSelected(discards[selectedIdx - 1])}
+        onNext={() => selectedIdx < discards.length - 1 && setSelected(discards[selectedIdx + 1])}
+      />
+    )}
   )
 }

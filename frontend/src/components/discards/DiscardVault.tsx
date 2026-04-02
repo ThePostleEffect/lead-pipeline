@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ExternalLink, RefreshCw } from 'lucide-react'
 import { clsx } from 'clsx'
 import { LaneBadge, QualityBadge, RuleBadge, ConfidenceScore } from '../shared/Badge'
+import { DiscardDrawer } from '../detail/DiscardDrawer'
 import { getVaultDiscards } from '../../api/client'
 import type { DiscardRecord } from '../../types'
 
@@ -23,6 +24,8 @@ export function DiscardVault() {
   const [discards, setDiscards] = useState<DiscardRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selected, setSelected] = useState<DiscardRecord | null>(null)
+  const selectedIdx = selected ? discards.findIndex((d) => d.lead_id === selected.lead_id) : -1
 
   const load = async () => {
     setLoading(true)
@@ -105,7 +108,8 @@ export function DiscardVault() {
               {discards.map((d) => (
                 <tr
                   key={d.lead_id}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] opacity-75 hover:opacity-100 transition-opacity"
+                  onClick={() => setSelected(d)}
+                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] opacity-75 hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <td className="px-4 py-2.5 font-medium text-[var(--color-text)] whitespace-nowrap max-w-48 truncate">
                     {d.company_name}
@@ -177,6 +181,17 @@ export function DiscardVault() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selected && (
+        <DiscardDrawer
+          discard={selected}
+          index={selectedIdx}
+          total={discards.length}
+          onClose={() => setSelected(null)}
+          onPrev={() => selectedIdx > 0 && setSelected(discards[selectedIdx - 1])}
+          onNext={() => selectedIdx < discards.length - 1 && setSelected(discards[selectedIdx + 1])}
+        />
       )}
     </div>
   )

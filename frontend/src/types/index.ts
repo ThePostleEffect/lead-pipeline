@@ -73,6 +73,8 @@ export interface DiscardRecord {
   public_company_confirmed: boolean
   trustee_related: boolean
   collected_at: string
+  score_breakdown: ScoreEntry[]
+  score_reasons: string[]
 }
 
 export interface RunResponse {

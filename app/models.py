@@ -140,3 +140,5 @@ class DiscardRecord(BaseModel):
     trustee_related: bool = False
     collected_at: str = ""
     email: Optional[str] = None
+    score_breakdown: list[dict] = Field(default_factory=list)
+    score_reasons: list[str] = Field(default_factory=list)

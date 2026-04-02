@@ -139,6 +139,7 @@ def run_collect(
                 public_company_confirmed=ld.public_company_confirmed,
                 trustee_related=ld.trustee_related,
                 collected_at=ld.collected_at,
+                email=ld.email,
             )
             for ld in rejected
         ]
