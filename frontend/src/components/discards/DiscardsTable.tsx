@@ -31,6 +31,7 @@ export function DiscardsTable() {
   }
 
   return (
+    <>
     <div className="overflow-auto h-full">
       <table className="w-max min-w-full text-sm">
         <thead className="sticky top-0 bg-[var(--color-surface)] z-10">
@@ -158,5 +159,6 @@ export function DiscardsTable() {
         onNext={() => selectedIdx < discards.length - 1 && setSelected(discards[selectedIdx + 1])}
       />
     )}
+    </>
   )
 }
