@@ -237,15 +237,24 @@ def get_global_discards() -> list[dict[str, Any]]:
     return [json.loads(row["data"]) for row in rows]
 
 
+_DEDUP_WINDOW_DAYS = 7
+
+
 def get_seen_keys() -> dict[str, tuple[str, str]]:
-    """Return all dedup keys across completed runs.
+    """Return dedup keys indexed within the last DEDUP_WINDOW_DAYS days.
+
+    Leads older than the window are allowed to re-enter — their situation
+    may have changed and they shouldn't be blocked forever.
 
     Returns a dict mapping key_str -> (run_id, lane), e.g.:
       "domain:example.com" -> ("RUN-ABC123", "bankruptcy")
     """
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=_DEDUP_WINDOW_DAYS)).isoformat()
     conn = _get_conn()
     rows = conn.execute(
-        "SELECT key_type, key_value, run_id, lane FROM lead_index"
+        "SELECT key_type, key_value, run_id, lane FROM lead_index WHERE indexed_at >= ?",
+        (cutoff,),
     ).fetchall()
     return {
         f"{row['key_type']}:{row['key_value']}": (row["run_id"], row["lane"])
